@@ -1,12 +1,11 @@
 package ee.bitweb.geneticalgorithm;
 
-import com.sun.org.apache.bcel.internal.generic.POP;
 import ee.bitweb.geneticalgorithm.fitness.FitnessFunction;
 import ee.bitweb.geneticalgorithm.selection.SelectionFunction;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Created by tobre on 18/07/2017.
@@ -24,16 +23,26 @@ public class Population {
         this.selectionFunction = selectionFunction;
     }
 
-    public void generateIndividuals() {
+    public void generateIndividuals(Class<? extends Chromosome> chromosomeClass) {
         for (int i = 0; i < populationSize; i++) {
             Individual individual = new Individual(this);
-            individual.generateGenes(1);
+            try {
+                individual.setChromosome(chromosomeClass.newInstance());
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
             individuals.add(individual);
         }
     }
 
     void addIndividual(Individual individual) {
         individuals.add(individual);
+    }
+
+    public void addIndividuals(Callable callable) throws Exception {
+        for (int i = 0; i < populationSize; i++) {
+            addIndividual((Individual) callable.call());
+        }
     }
 
     public List<Individual> getIndividuals() {
@@ -56,8 +65,7 @@ public class Population {
         for (int i = 0; i < individuals.size(); i++) {
             Individual parent1 = selectParent();
             Individual parent2 = selectParent();
-            Individual child = parent1.crossover(parent2);
-            child.setParentPopulation(newPopulation);
+            Individual child = parent1.crossover(newPopulation, parent2);
             child.mutate();
             newPopulation.addIndividual(child);
         }
@@ -68,5 +76,9 @@ public class Population {
 
     private Individual selectParent() {
         return selectionFunction.selectParent();
+    }
+
+    public FitnessFunction getFitnessFunction() {
+        return fitnessFunction;
     }
 }

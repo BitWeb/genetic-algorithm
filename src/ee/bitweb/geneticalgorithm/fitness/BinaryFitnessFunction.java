@@ -1,32 +1,35 @@
 package ee.bitweb.geneticalgorithm.fitness;
 
-import ee.bitweb.geneticalgorithm.Gene;
 import ee.bitweb.geneticalgorithm.Individual;
-import ee.bitweb.geneticalgorithm.solution.SolutionFunction;
+import ee.bitweb.geneticalgorithm.util.BinaryUtil;
 
 /**
  * Created by tobre on 18/07/2017.
  */
 public class BinaryFitnessFunction implements FitnessFunction<Integer> {
 
-    private SolutionFunction solutionFunction;
+    private Double solution;
+    private byte[] solutionAllele;
 
-    @Override
-    public void setSolutionFunction(SolutionFunction solutonFunction) {
-        this.solutionFunction = solutonFunction;
+    public BinaryFitnessFunction(Double solution) {
+        this.solution = solution;
+        this.solutionAllele = BinaryUtil.convert(solution);
     }
 
     @Override
     public Integer getFitness(Individual individual) {
         int fitness = 0;
-        for (Gene gene : individual.getGenes()) {
-            for (int i = 0; i < gene.getAlleles().length; i++) {
-                if (gene.getAllele(i) == solutionFunction.getSolutionAllele(i)) {
-                    fitness++;
-                }
+        byte[] alleles = individual.getChromosome().getAlleles();
+        for (int i = 0; i < alleles.length; i++) {
+            if (alleles[i] == solutionAllele[i]) {
+                fitness++;
             }
         }
 
         return fitness;
+    }
+
+    public Integer getMaxFitness() {
+        return solutionAllele.length;
     }
 }
